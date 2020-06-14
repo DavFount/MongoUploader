@@ -57,10 +57,9 @@ def ImportToMongo():
         # Loop through the file line by line
         for row in csvReader:
             # Check for invalid patients
-            for key, value in row:
+            for key, value in row.items():
                 if key in data["pt_name_columns"]:
                     if isTestPatient(value):
-                        print(value)
                         continue
             
             # Only works when needed.
@@ -79,11 +78,11 @@ def ImportToMongo():
                 if conversion_set["value"]:
                     row[conversion_set["name"]] = conversion_set["value"]
                 else:
-                    try: 
+                    try:
                         if conversion_set["type"] == "string":
                             row[conversion_set["name"]] = row[conversion_set["name"]].strip()
                         elif conversion_set["type"] == "float":
-                            row[conversion_set["name"]] = float(row[conversion_set["name"]])
+                            row[conversion_set["name"]] = float(row[conversion_set["name"]].replace(",", ""))
                         elif conversion_set["type"] == "integer":
                             row[conversion_set["name"]] = int(row[conversion_set["name"]])
                         elif conversion_set["type"] == "date":
