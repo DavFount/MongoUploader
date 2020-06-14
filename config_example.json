@@ -1,0 +1,25 @@
+{
+    "connection_uri": "",
+    "database": "",
+    "date_format": "%Y-%m-%d",
+    "collections": [
+        "Collections",
+        "Go",
+        "Here"
+    ],
+    "invalid_patient": [
+        "Invalid Patient Names",
+        "Should be added here"
+    ],
+    "pt_name_columns": [
+        "Column Name where the patients name is located",
+        "Can contain multiple column names"
+    ],
+    "conversion_sets": [
+        {
+            "name": "Column Name",
+            "type": "date/float/integer/string",
+            "value": null
+        }
+    ]
+}
