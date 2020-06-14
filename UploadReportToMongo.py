@@ -1,3 +1,9 @@
+# Author: Davidalen Fountain
+# Version: 2.0
+# Email: davfount@gmail.com
+# Description: Takes a CSV file and uploads to Mongo DB. 
+
+
 import csv
 import time
 import re
@@ -10,7 +16,6 @@ from pymongo import MongoClient
 from pymongo.errors import BulkWriteError
 
 
-# Load Config File
 with open('config.json') as config_file:
     data = json.load(config_file)
 
@@ -18,18 +23,33 @@ with open('config.json') as config_file:
 client = MongoClient(data["connection_uri"])
 database = client[data["database"]]
 
-
+#############################
+# isTestPatient(PatientName)
+# This function checks the columns with patient names and comapres it to an 
+# array of invalid or test patient names.
+# Inputs: PatientName is the name of the patient from the CSV file.
+# returns boolean if the patient name is invalid or not
 def isTestPatient(PatientName):
     for name in data["invalid_patient"]:
         if name in PatientName:
             return True
     return False
 
+#############################
+# FileSelect(event)
+# This function handles the selection of a file via the GUI
+# Inputs: Event Object
+# no return value
 def FileSelect(event=None):
     filename = filedialog.askopenfilename(
         initialdir="/", title="Select file", filetypes=(("CSV files", "*.csv"), ))
     entryText.set(filename)
 
+#############################
+# ImportToMongo()
+# This function reads the CSV file line by line. Performs any required type conversions. And lastly uploads the data to a MongoDatabase.
+# Inputs: None
+# No return value
 def ImportToMongo():
     filepath = entryText.get()
     collection = choices_variable.get()
@@ -108,6 +128,7 @@ def ImportToMongo():
 
         last_run_text.set(f'Upload Finished {entryText.get()}')
         entryText.set('')
+        
 
 root = tk.Tk()
 root.title("Upload files to MongoDB")
@@ -143,5 +164,4 @@ error.grid(row=2, columnspan=3, pady=5, padx=2)
 last_run_text = tk.StringVar()
 last_run = tk.Label(root, textvariable=last_run_text)
 last_run.grid(row=3, columnspan=3, pady=5, padx=2)
-
 root.mainloop()
