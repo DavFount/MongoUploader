@@ -17,11 +17,7 @@ from pymongo.errors import BulkWriteError
 
 
 with open('config.json') as config_file:
-    data = json.load(config_file)
-
-
-client = MongoClient(data["connection_uri"])
-database = client[data["database"]]
+    config = json.load(config_file)
 
 #############################
 # isTestPatient(PatientName)
@@ -30,7 +26,7 @@ database = client[data["database"]]
 # Inputs: PatientName is the name of the patient from the CSV file.
 # returns boolean if the patient name is invalid or not
 def isTestPatient(PatientName):
-    for name in data["invalid_patient"]:
+    for name in config["invalid_patient"]:
         if name in PatientName:
             return True
     return False
@@ -45,14 +41,20 @@ def FileSelect(event=None):
         initialdir="/", title="Select file", filetypes=(("CSV files", "*.csv"), ))
     entryText.set(filename)
 
+def DatabaseMenu_SelectionEvent(e):
+    collection_select = tk.OptionMenu(
+        root, choices_variable, *config["collections"][dbchoices_variable.get()])
+    collection_select.grid(row=2, column=0, pady=5)
+
 #############################
 # ImportToMongo()
-# This function reads the CSV file line by line. Performs any required type conversions. And lastly uploads the data to a MongoDatabase.
+# This function reads the CSV file line by line. Performs any required type conversions. And lastly uploads the config to a Mongo Database.
 # Inputs: None
 # No return value
 def ImportToMongo():
     filepath = entryText.get()
     collection = choices_variable.get()
+    database_name = dbchoices_variable.get()
 
     # Return error if file is lft blank or set to an invalid file.
     if not path.exists(filepath) or not 'csv' in filepath:
@@ -63,6 +65,12 @@ def ImportToMongo():
     if collection == 'Select a collection':
         error_text.set('Error: A collection is required.')
         return
+
+    if database_name == 'Select a database':
+        error_text.set('Error: A database is required.')
+
+    client = MongoClient(config["connection_uri"])
+    database = client[database_name]
 
     # Empty list to queue patients for upload
     FileContent = []
@@ -78,7 +86,7 @@ def ImportToMongo():
         for row in csvReader:
             # Check for invalid patients
             for key, value in row.items():
-                if key in data["pt_name_columns"]:
+                if key in config["pt_name_columns"]:
                     if isTestPatient(value):
                         continue
             
@@ -90,27 +98,28 @@ def ImportToMongo():
             except:
                 pass
 
-            # Convert Datatypes to correct Data Types
-            for conversion_set in data["conversion_sets"]:
-                if not conversion_set["name"] in row.keys():
-                    continue
+            # Convert data types to correct data Types
+            if collection in config["conversion_sets"].keys():
+                for conversion_set in config["conversion_sets"][collection]:
+                    if not conversion_set["name"] in row.keys():
+                        continue
 
-                if conversion_set["value"]:
-                    row[conversion_set["name"]] = conversion_set["value"]
-                else:
-                    try:
-                        if conversion_set["type"] == "string":
-                            row[conversion_set["name"]] = row[conversion_set["name"]].strip()
-                        elif conversion_set["type"] == "float":
-                            row[conversion_set["name"]] = float(row[conversion_set["name"]].replace(",", ""))
-                        elif conversion_set["type"] == "integer":
-                            row[conversion_set["name"]] = int(row[conversion_set["name"]])
-                        elif conversion_set["type"] == "date":
-                            row[conversion_set["name"]] = datetime.strptime(row[conversion_set["name"]], data["date_format"])
-                        else:
-                            print(f'Type not found: {conversion_set["type"]}')
-                    except ValueError as ve:
-                        print('Error: ', ve)
+                    if conversion_set["value"]:
+                        row[conversion_set["name"]] = conversion_set["value"]
+                    else:
+                        try:
+                            if conversion_set["type"] == "string":
+                                row[conversion_set["name"]] = row[conversion_set["name"]].strip()
+                            elif conversion_set["type"] == "float":
+                                row[conversion_set["name"]] = float(row[conversion_set["name"]].replace(",", ""))
+                            elif conversion_set["type"] == "integer":
+                                row[conversion_set["name"]] = int(row[conversion_set["name"]])
+                            elif conversion_set["type"] == "date":
+                                row[conversion_set["name"]] = datetime.strptime(row[conversion_set["name"]], config["date_format"])
+                            else:
+                                print(f'Type not found: {conversion_set["type"]}')
+                        except ValueError as ve:
+                            print('Error: ', ve)
                 
             
             FileContent.append(row)
@@ -132,7 +141,7 @@ def ImportToMongo():
 
 root = tk.Tk()
 root.title("Upload files to MongoDB")
-root.minsize(410, 120)
+root.minsize(410, 175)
 
 entryText = tk.StringVar()
 file_path = tk.Entry(root, textvariable=entryText, width=50)
@@ -141,12 +150,16 @@ file_path.grid(row=0, columnspan=2, column=0, pady=5, padx=5)
 select_button = tk.Button(root, text='Select File', command=FileSelect)
 select_button.grid(row=0, column=2, pady=5, padx=5)
 
+dbchoices_variable = tk.StringVar()
+dbchoices_variable.set('Select a database')
+
+db_select = tk.OptionMenu(
+    root, dbchoices_variable, *config["databases"], command = DatabaseMenu_SelectionEvent)
+db_select.grid(row=1, column=0, pady=5)
+
+
 choices_variable = tk.StringVar()
 choices_variable.set('Select a collection')
-
-collection_select = tk.OptionMenu(
-    root, choices_variable, *data["collections"])
-collection_select.grid(row=1, column=0, pady=5)
 
 upload_button_text = tk.StringVar()
 upload_button = tk.Button(root, text='Upload File',
@@ -159,9 +172,9 @@ quit_button.grid(row=1, column=2, pady=5)
 error_text = tk.StringVar()
 error = tk.Label(root, textvariable=error_text)
 error.config(fg='red')
-error.grid(row=2, columnspan=3, pady=5, padx=2)
+error.grid(row=3, columnspan=3, pady=5, padx=2)
 
 last_run_text = tk.StringVar()
 last_run = tk.Label(root, textvariable=last_run_text)
-last_run.grid(row=3, columnspan=3, pady=5, padx=2)
+last_run.grid(row=4, columnspan=3, pady=5, padx=2)
 root.mainloop()

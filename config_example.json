@@ -1,12 +1,22 @@
 {
     "connection_uri": "",
-    "database": "",
-    "date_format": "%Y-%m-%d",
-    "collections": [
-        "Collections",
-        "Go",
-        "Here"
+    "databases": [
+        "Test1",
+        "test2"
     ],
+    "date_format": "%Y-%m-%d",
+    "collections": {
+        "Test1": [
+            "Collections",
+            "From",
+            "Test1"
+        ],
+        "test2": [
+            "Collections",
+            "From",
+            "test2"
+        ]
+    },
     "invalid_patient": [
         "Invalid Patient Names",
         "Should be added here"
@@ -15,11 +25,20 @@
         "Column Name where the patients name is located",
         "Can contain multiple column names"
     ],
-    "conversion_sets": [
-        {
-            "name": "Column Name",
-            "type": "date/float/integer/string",
-            "value": null
-        }
-    ]
+    "conversion_sets": {
+        "A Collection Name From Above": [
+            {
+                "name": "Column Name",
+                "type": "date/float/integer/string",
+                "value": null
+            }
+        ],
+        "Next Collection Name": [
+            {
+                "name": "Column Name",
+                "type": "date/float/integer/string",
+                "value": null
+            }
+        ]
+    }
 }
