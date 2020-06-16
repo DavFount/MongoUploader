@@ -45,6 +45,7 @@ def DatabaseMenu_SelectionEvent(e):
     collection_select = tk.OptionMenu(
         root, choices_variable, *config["collections"][dbchoices_variable.get()])
     collection_select.grid(row=2, column=0, pady=5)
+    choices_variable.set('Select a collection')
 
 #############################
 # ImportToMongo()
